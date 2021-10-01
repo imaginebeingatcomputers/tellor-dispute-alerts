@@ -1,0 +1,21 @@
+version: "3.9"  # optional since v1.27.0
+services:
+  web:
+    build: .
+    volumes:
+      - .:/code
+      - logvolume01:/var/log
+    links:
+      - redis
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${postgres_password}
+      POSTGRES_USER: ${postgres_user}
+      POSTGRES_DB: ${postgres_db}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
+    external: true
