@@ -3,10 +3,9 @@ from loguru import logger
 from datetime import datetime
 import sched
 import time
-from postgresql import PostgreSql
+from utils.postgresql import PostgreSql
 import argparse
-from etherscan import EtherscanInstance
-import sys
+from utils.etherscan import EtherscanInstance
 
 s = sched.scheduler(time.time, time.sleep)
 log_time = datetime.utcnow()
@@ -33,7 +32,6 @@ def parse_args():
     )
     parser.add_argument(
         "--pg-host",
-        "-h",
         type=str,
         action="store",
         dest="pg_host",
@@ -43,15 +41,21 @@ def parse_args():
         "--pg-port",
         "-o",
         type=str,
+        action="store",
         dest="pg_port",
         required=True,
     )
     parser.add_argument(
-        "--etherscan-api-key", type=str, dest="etherscan_api_key", required=True
+        "--etherscan-api-key",
+        action="store",
+        type=str,
+        dest="etherscan_api_key",
+        required=True,
     )
     parser.add_argument(
         "--etherscan_url",
         type=str,
+        action="store",
         dest="etherscan_url",
         default="https://api.etherscan.io/api",
     )
@@ -61,22 +65,32 @@ def parse_args():
         dest="discord_webook_url",
         required=True,
     )
+    parser.add_argument(
+        "--daemonize",
+        "-d",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--database-name",
+        type=str,
+        action="store",
+        dest="database_name",
+        default="disputes",
+    )
     args = parser.parse_args()
     return args
 
 
-def main():
-    arg_namespace = parse_args()
+def update(arg_namespace):
     pg_instance = PostgreSql(
         username=arg_namespace.pg_username,
         password=arg_namespace.pg_password,
         host=arg_namespace.pg_host,
-        port=arg_namespace.pg_host,
+        port=arg_namespace.pg_port,
+        db=arg_namespace.database_name,
     )
     pg_instance.create_tables()
-    etherscan_instance = EtherscanInstance(
-        api_key=arg_namespace.etherscan_api_key, url=arg_namespace.etherscan_url
-    )
+    etherscan_instance = EtherscanInstance(api_key=arg_namespace.etherscan_api_key)
     discord_instance = DiscordServer(webhook_url=arg_namespace.discord_webook_url)
     last_dispute = pg_instance.get_last_dispute_block()
     if last_dispute is None:
@@ -96,6 +110,16 @@ def main():
         if len(tallied_disputes) != 0:
             discord_instance.post_tally(tallied_disputes)
             pg_instance.update_tallied_disputes(tallied_disputes)
+
+
+def main():
+    arg_namespace = parse_args()
+    if arg_namespace.daemonize:
+        while True:
+            update(arg_namespace)
+            time.sleep(300)
+    else:
+        update(arg_namespace)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import requests
 import json
-from eth_utils import twos_comp
+from .eth_utils import twos_comp
 
 
 class EtherscanInstance:
@@ -30,7 +30,7 @@ class EtherscanInstance:
                 logs = json.loads(response.text)["result"]
                 for dispute in logs:
                     parsed_dispute = {}
-                    parsed_dispute["dispute_id"] = (int(dispute["topics"][1], 16),)
+                    parsed_dispute["dispute_id"] = int(dispute["topics"][1], 16)
                     parsed_dispute[
                         "disputed_miner_address"
                     ] = f"{dispute['data'][-40:]}"
