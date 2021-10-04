@@ -20,26 +20,23 @@ class EtherscanInstance:
             "topic0": "0xeceec1aebf67772b2440120c4b4dc913a1fe1b865509219f9456785c23b9da64",
         }
 
-        parsed = False
-        attempts = 0
         parsed_disputes = []
-        while not parsed and attempts < 6:
-            attempts += 1
-            response = requests.request("GET", url, params=payload)
-            if response.status_code == 200:
-                logs = json.loads(response.text)["result"]
-                for dispute in logs:
-                    parsed_dispute = {}
-                    parsed_dispute["dispute_id"] = int(dispute["topics"][1], 16)
-                    parsed_dispute[
-                        "disputed_miner_address"
-                    ] = f"{dispute['data'][-40:]}"
-                    parsed_dispute["creation_block_number"] = int(
-                        dispute["blockNumber"], 16
-                    )
-                    parsed_dispute["time_created"] = int(dispute["timeStamp"], 16)
-                    parsed_dispute["creation_tx"] = dispute["transactionHash"]
-                    parsed_disputes.append(parsed_dispute)
+        response = requests.request("GET", url, params=payload)
+        if response.status_code == 200:
+            logs = json.loads(response.text)["result"]
+            for dispute in logs:
+                parsed_dispute = {}
+                parsed_dispute["dispute_id"] = int(dispute["topics"][1], 16)
+                parsed_dispute[
+                    "disputed_miner_address"
+                ] = f"{dispute['data'][-40:]}"
+                parsed_dispute["creation_block_number"] = int(
+                    dispute["blockNumber"], 16
+                )
+                parsed_dispute["time_created"] = int(dispute["timeStamp"], 16)
+                parsed_dispute["creation_tx"] = dispute["transactionHash"]
+                parsed_disputes.append(parsed_dispute)
+
         return parsed_disputes
 
     def get_disputes_tallied(self, from_block: int) -> list[dict]:

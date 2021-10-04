@@ -1,3 +1,4 @@
+from logging import log
 from utils.discord_server import DiscordServer
 from loguru import logger
 from datetime import datetime
@@ -97,19 +98,27 @@ def update(arg_namespace):
         disputes = etherscan_instance.get_disputes(11895800)
         pg_instance.insert_disputes(disputes)
     else:
-        disputes = etherscan_instance.get_disputes(last_dispute[3] + 1)
-        if len(disputes) != 0:
-            discord_instance.post_dispute(disputes)
-            pg_instance.insert_disputes(disputes)
+        try:
+            disputes = etherscan_instance.get_disputes(last_dispute[3] + 1)
+            if len(disputes) != 0:
+                discord_instance.post_dispute(disputes)
+                pg_instance.insert_disputes(disputes)
+        except (KeyError, Exception) as error:
+            logger.warning("Failed retrieving last dispute")
+            logger.error(error)
     last_tallied = pg_instance.get_last_tally_block()
     if last_tallied is None:
         tallied_disputes = etherscan_instance.get_disputes_tallied(11895800)
         pg_instance.update_tallied_disputes(tallied_disputes)
     else:
-        tallied_disputes = etherscan_instance.get_disputes_tallied(last_tallied[8] + 1)
-        if len(tallied_disputes) != 0:
-            discord_instance.post_tally(tallied_disputes)
-            pg_instance.update_tallied_disputes(tallied_disputes)
+        try:
+            tallied_disputes = etherscan_instance.get_disputes_tallied(last_tallied[8] + 1)
+            if len(tallied_disputes) != 0:
+                discord_instance.post_tally(tallied_disputes)
+                pg_instance.update_tallied_disputes(tallied_disputes)
+        except (KeyError, Exception) as error:
+            logger.warning("Failure retrieving last tally.")
+            logger.error(error)
 
 
 def main():

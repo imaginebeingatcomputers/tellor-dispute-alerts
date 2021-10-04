@@ -1,5 +1,5 @@
 .dockerignore
 .env
-.vscode/
+.vscode/*
 *.log
 __pycache__

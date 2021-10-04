@@ -1,13 +1,18 @@
 version: "3.8"  # optional since v1.27.0
 services:
   bot:
-    image: tellor-alert-bot:02
+    image: tellor-alert-bot:debug
+    build:
+      context: .
+      dockerfile: ./Dockerfile.debug
     depends_on:
       - postgres
     links:
       - postgres
     restart: on-failure
-    command:  -p ${POSTGRES_PASSWORD} -u ${POSTGRES_USERNAME} --pg-host=postgres -o 5432 --etherscan-api-key=${ETHERSCAN_API_KEY} --discord-webook-url=${DISCORD_WEBHOOK_URL}
+    command: ["sh", "-c","python3 -m pip install debugpy -t /tmp && python3 /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 alert_bot.py -p ${POSTGRES_PASSWORD} -u ${POSTGRES_USERNAME} --pg-host postgres -o 5432 --etherscan-api-key ${ETHERSCAN_API_KEY} --discord-webook-url ${DISCORD_WEBHOOK_URL}"]
+    ports:
+     - 5678:5678
 
   postgres:
     container_name: postgres

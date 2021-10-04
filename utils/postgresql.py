@@ -95,14 +95,13 @@ class PostgreSql:
                     cur.execute(
                         """
                         INSERT INTO disputes (disputeId, disputeTx, disputeTime, disputeBlockNumber, tallied, disputedMiner)
-                        VALUES (%s,%s,%s,%s,%s,%s)
+                        VALUES (%s,%s,%s,%s,false,%s)
                         """,
                         (
                             dispute["dispute_id"],
                             dispute["creation_tx"],
                             dispute["time_created"],
                             dispute["creation_block_number"],
-                            False,
                             dispute["disputed_miner_address"],
                         ),
                     )
@@ -131,7 +130,7 @@ class PostgreSql:
                     cur.execute(
                         """
                         UPDATE disputes
-                        SET tallied = %s,
+                        SET tallied = true,
                             tally = %s,
                             tallyTx = %s,
                             tallyBlockNumber = %s,
@@ -140,7 +139,6 @@ class PostgreSql:
                         WHERE disputeId = %s AND tallied = false
                         """,
                         (
-                            True,
                             dispute["tally"],
                             dispute["tallied_tx"],
                             dispute["tallied_block_number"],
