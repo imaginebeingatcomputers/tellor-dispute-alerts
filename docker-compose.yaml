@@ -1,13 +1,16 @@
 version: "3.8"  # optional since v1.27.0
 services:
   bot:
-    image: tellor-alert-bot:02
+    image: tellor-alert-bot
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     depends_on:
       - postgres
     links:
       - postgres
     restart: on-failure
-    command:  -p ${POSTGRES_PASSWORD} -u ${POSTGRES_USERNAME} --pg-host=postgres -o 5432 --etherscan-api-key=${ETHERSCAN_API_KEY} --discord-webook-url=${DISCORD_WEBHOOK_URL}
+    command:  -p ${POSTGRES_PASSWORD} -u ${POSTGRES_USERNAME} --pg-host=postgres -o 5432 --etherscan-api-key=${ETHERSCAN_API_KEY} --discord-webook-url=${DISCORD_WEBHOOK_URL} -d
 
   postgres:
     container_name: postgres

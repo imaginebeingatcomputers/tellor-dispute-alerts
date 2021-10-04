@@ -1,4 +1,3 @@
-from logging import log
 from utils.discord_server import DiscordServer
 from loguru import logger
 from datetime import datetime
@@ -82,15 +81,7 @@ def parse_args():
     return args
 
 
-def update(arg_namespace):
-    pg_instance = PostgreSql(
-        username=arg_namespace.pg_username,
-        password=arg_namespace.pg_password,
-        host=arg_namespace.pg_host,
-        port=arg_namespace.pg_port,
-        db=arg_namespace.database_name,
-    )
-    pg_instance.create_tables()
+def update(arg_namespace, pg_instance):
     etherscan_instance = EtherscanInstance(api_key=arg_namespace.etherscan_api_key)
     discord_instance = DiscordServer(webhook_url=arg_namespace.discord_webook_url)
     last_dispute = pg_instance.get_last_dispute_block()
@@ -112,7 +103,7 @@ def update(arg_namespace):
         pg_instance.update_tallied_disputes(tallied_disputes)
     else:
         try:
-            tallied_disputes = etherscan_instance.get_disputes_tallied(last_tallied[8] + 1)
+            tallied_disputes = etherscan_instance.get_disputes_tallied(last_tallied[9] + 1)
             if len(tallied_disputes) != 0:
                 discord_instance.post_tally(tallied_disputes)
                 pg_instance.update_tallied_disputes(tallied_disputes)
@@ -123,12 +114,20 @@ def update(arg_namespace):
 
 def main():
     arg_namespace = parse_args()
+    pg_instance = PostgreSql(
+        username=arg_namespace.pg_username,
+        password=arg_namespace.pg_password,
+        host=arg_namespace.pg_host,
+        port=arg_namespace.pg_port,
+        db=arg_namespace.database_name,
+    )
+    pg_instance.create_tables()
     if arg_namespace.daemonize:
         while True:
-            update(arg_namespace)
+            update(arg_namespace, pg_instance)
             time.sleep(300)
     else:
-        update(arg_namespace)
+        update(arg_namespace, pg_instance)
 
 
 if __name__ == "__main__":

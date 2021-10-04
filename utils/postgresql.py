@@ -20,7 +20,7 @@ class PostgreSql:
         )
         with conn.cursor() as cur:
             cur.execute(
-                f"SELECT * FROM {self.db} WHERE tallied = false ORDER BY disputeId DESC"
+                f"SELECT * FROM {self.db} ORDER BY disputeId DESC"
             )
             last_confirmed_block = cur.fetchone()
         return last_confirmed_block
@@ -44,6 +44,7 @@ class PostgreSql:
         query = (
             f" CREATE TABLE IF NOT EXISTS {self.db} ("
             """ disputeId              integer PRIMARY KEY,
+                requestId              integer NOT NULL, 
                 disputeTx              varchar NOT NULL,
                 disputeTime            integer NOT NULL,
                 disputeBlockNumber     integer NOT NULL,
@@ -94,11 +95,12 @@ class PostgreSql:
 
                     cur.execute(
                         """
-                        INSERT INTO disputes (disputeId, disputeTx, disputeTime, disputeBlockNumber, tallied, disputedMiner)
-                        VALUES (%s,%s,%s,%s,false,%s)
+                        INSERT INTO disputes (disputeId, requestId, disputeTx, disputeTime, disputeBlockNumber, tallied, disputedMiner)
+                        VALUES (%s,%s,%s,%s,%s,false,%s)
                         """,
                         (
                             dispute["dispute_id"],
+                            dispute["request_id"],
                             dispute["creation_tx"],
                             dispute["time_created"],
                             dispute["creation_block_number"],
